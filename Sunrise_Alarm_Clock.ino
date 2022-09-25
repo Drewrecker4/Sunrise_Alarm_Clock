@@ -3,7 +3,6 @@
 #include <Wire.h>
 #include "RTClib.h"
 #include <Keypad.h>
-//#include "SoftwareSerial.h"
 #include "DFRobotDFPlayerMini.h"
 #include <SPI.h>
 #include "IRremote.h"
@@ -83,6 +82,9 @@ const int volumeDownButton = 35;
 unsigned long startMillis;
 unsigned long currentMillis;
 unsigned long IRmillis;
+uint8_t processSeconds;
+uint8_t currentSecond;
+bool displayVolumeState;
 const unsigned long period = 1000;
 const unsigned long miniPeriod = 500;
 const unsigned long longPeriod = 2000;
@@ -106,7 +108,7 @@ int snoozeState = 0;
 int snoozeStartingPoint;
 int alarmStartingPoint;
 int snoozeTracker;
-int alarmLightTracker;
+int alarmLightTracker; 
 
 
 //alarm global variables
@@ -126,6 +128,7 @@ const int volumeDial = 1;
 bool volumeUpState;
 bool volumeDownState;
 int currentVolume;
+uint8_t processVolume;
 String alarmDelay0;
 String alarmDelay1;
 String alarmDelayStr;
@@ -143,16 +146,13 @@ void setup() {
   u8g2.begin();
   u8g2.enableUTF8Print();
   Serial.begin(115200);
-  //Serial.begin(9600);
   Serial1.begin(9600);
-  //mySoftwareSerial.begin(9600);
   Serial.println("IR Receiver Button Decode"); 
   irrecv.enableIRIn();
   Wire.begin();
   RTC.begin();
   if (! RTC.isrunning()) {
     u8g2.drawStr(15, 10, "Clock is broken");
-    //RTC.adjust(DateTime(__DATE__, __TIME__));
   }
   //RTC.adjust(DateTime(2022, 7, 3, 23, 55, 0)); //adjust real time clock (year, month, day, hour, minute, second) - consider that RTC uses military time
 
@@ -163,16 +163,16 @@ void setup() {
   }
 
   randomSeed(analogRead(0));
-  //randomSong = random(1,41);
 
 
 //setting variables to default starting values
   startMillis = millis();
   beginMillis = millis();
   IRmillis = millis();
+  processSeconds = 0;
+  displayVolumeState = false;
   secondFlash = false;
   miniFlash = false;
-  //volume = 18;
   alarmState = false;
   pageCount = 0;
   alarmCounter = 0;
@@ -199,17 +199,16 @@ void setup() {
   volumeButtonVal = 12;
   volumeUpState = false;
   volumeDownState = false;
+  processVolume = 0;
 
   pinMode(busyPin, INPUT_PULLUP);
   pinMode(skipButton, INPUT_PULLUP);
   pinMode(snoozeButton, INPUT_PULLUP);
   pinMode(snoozeLightPin, OUTPUT);
-  //pinMode(alarmLightPin, OUTPUT);
   pinMode(volumeUpButton, INPUT_PULLUP);
   pinMode(volumeDownButton, INPUT_PULLUP);
 
 
-  //u8g2.setContrast(255);
 }
 
 
@@ -218,12 +217,8 @@ void loop() {
   if (irrecv.decode(&results)) {
     translateIR();
     if (currentMillis - IRmillis >= microPeriod) {
-      //delay(500);
       irrecv.resume(); // receive the next value
       IRmillis = currentMillis;
-      //remoteState = true;
-    //} else {
-      //remoteState = false;
     }
   }
   
@@ -234,7 +229,7 @@ void loop() {
     realTimeClock();
     startMillis = currentMillis;
     secondFlash = !secondFlash;
-    Serial.println(currentMillis);
+    //Serial.println(currentMillis);
   }
 
   if (currentMillis - beginMillis >= longPeriod) {
@@ -244,7 +239,6 @@ void loop() {
     miniFlash = true;
   }
 
-  //Serial.println(miniFlash);
 
   if (keyInput == "*" || pageCount > 5 || remoteInput == "FUNC/STOP") {
     pageCount = 0;
@@ -289,7 +283,6 @@ void loop() {
   char key = keypad.getKey();
   keyInput = key;
   alarmLogic();
-
   displayPage(); //determine the page to display
   convertAlarm(); //convert alarm string values to integers
   convertSnooze(); //convert snooze string values to integers
@@ -301,6 +294,7 @@ void loop() {
   checkSnooze(); //check if alarm will be snoozed
   displayAlarmLights(); //sets the brightness for each LED color on the LED strip
   checkVolume(); //changes volume value if set to use buttons
+  displayVolume(); //checks if volume changes to determine what to display
 
   if (volumeSetting == 0) {
     currentVolume = volumeButtonVal;
@@ -316,15 +310,15 @@ void loop() {
   volumeUpState = digitalRead(volumeUpButton);
   volumeDownState = digitalRead(volumeDownButton);
 
+  Serial.print(currentVolume);
+  Serial.print(" ");
+  Serial.print(processVolume);
+  Serial.print(" ");
+  Serial.print(processSeconds);
+  Serial.print(" ");
+  Serial.println(currentSecond);
 
 
-/*
-  if (busyState == HIGH) {
-    randomSong = random(1,41);
-    delay(100);
-    myDFPlayer.next();
-    myDFPlayer.playFolder(2,randomSong);
-  }*/
 }
 
 
@@ -354,7 +348,6 @@ void displayPage() {
 
 void callHomePage() {
     u8g2.clearBuffer();
-    //u8g2.setContrast(10);
     homePage();
     u8g2.sendBuffer();
 }
@@ -587,29 +580,47 @@ void homePage() {
     u8g2.drawStr(0, 0, " ");
   }
 
-  u8g2_smallSymbols();
+  //u8g2_smallSymbols();
 
   //display volume level
-  if (currentVolume >= 24) {
-    u8g2.drawUTF8(93, 0, "\u2581");
-    u8g2.drawUTF8(100, 0, "\u2582");
-    u8g2.drawUTF8(107, 0, "\u2583");
-    u8g2.drawUTF8(114, 0, "\u2584");
-    u8g2.drawUTF8(121, 0, "\u2585");
-  } else if (currentVolume >= 18) {
-    u8g2.drawUTF8(93, 0, "\u2581");
-    u8g2.drawUTF8(100, 0, "\u2582");
-    u8g2.drawUTF8(107, 0, "\u2583");
-    u8g2.drawUTF8(114, 0, "\u2584");
-  } else if (currentVolume >= 12) {
-    u8g2.drawUTF8(93, 0, "\u2581");
-    u8g2.drawUTF8(100, 0, "\u2582");
-    u8g2.drawUTF8(107, 0, "\u2583");
-  } else if (currentVolume >= 6) {
-    u8g2.drawUTF8(93, 0, "\u2581");
-    u8g2.drawUTF8(100, 0, "\u2582");
-  } else {
-    u8g2.drawUTF8(93, 0, "\u2581");
+  if (processVolume != currentVolume) {
+    u8g2_Text8();
+    if (currentVolume < 10) {
+      u8g2.setCursor(93, 0);
+      u8g2.print("          ");
+      u8g2.print(currentVolume);
+    } else if (currentVolume >= 10) {
+      u8g2.setCursor(93, 0);
+      u8g2.print("        ");
+      u8g2.print(currentVolume);
+    }
+  } else if (processVolume == currentVolume) {
+    if (currentVolume >= 24) {
+      u8g2_smallSymbols();
+      u8g2.drawUTF8(93, 0, "\u2581");
+      u8g2.drawUTF8(100, 0, "\u2582");
+      u8g2.drawUTF8(107, 0, "\u2583");
+      u8g2.drawUTF8(114, 0, "\u2584");
+      u8g2.drawUTF8(121, 0, "\u2585");
+    } else if (currentVolume >= 18) {
+      u8g2_smallSymbols();
+      u8g2.drawUTF8(93, 0, "\u2581");
+      u8g2.drawUTF8(100, 0, "\u2582");
+      u8g2.drawUTF8(107, 0, "\u2583");
+      u8g2.drawUTF8(114, 0, "\u2584");
+    } else if (currentVolume >= 12) {
+      u8g2_smallSymbols();
+      u8g2.drawUTF8(93, 0, "\u2581");
+      u8g2.drawUTF8(100, 0, "\u2582");
+      u8g2.drawUTF8(107, 0, "\u2583");
+    } else if (currentVolume >= 6) {
+      u8g2_smallSymbols();
+      u8g2.drawUTF8(93, 0, "\u2581");
+      u8g2.drawUTF8(100, 0, "\u2582");
+    } else {
+      u8g2_smallSymbols();
+      u8g2.drawUTF8(93, 0, "\u2581");
+    }
   }
 }
 
@@ -1030,7 +1041,6 @@ void checkAlarm () {
   if (alarmState == true) {
     if ((fixedHours == alarmHourInt) && (fixedMinutes == alarmMinuteInt) && (fixedSeconds == 0)) {
       alarmLightHasStarted = true;
-      //digitalWrite(alarmLightPin, HIGH);
       alarmStartingPoint = now.second();
     }
   }
@@ -1045,14 +1055,12 @@ void checkAlarm () {
 
   if (alarmLightHasStarted == true && alarmLightTracker >= alarmTimeSeconds) {
     if ((busyState == HIGH || playNextSong == true || remoteInput == "PAUSE") && snoozeHasStarted == false) {
-      //delay(100); //test
       alarmHasStarted = true;
       randomSong = random(1,songAmount);
       myDFPlayer.playFolder(playlistCounter,randomSong);
       remoteInput = "z";
       delay(1000);
       playNextSong = false;
-      //alarmLightTracker = 0;
     }
   }
 
@@ -1108,7 +1116,6 @@ void endAlarm() {
     alarmLightHasStarted = false;
     snoozeHasStarted = false;
     digitalWrite(snoozeLightPin, LOW);
-    //digitalWrite(alarmLightPin, LOW);
     playNextSong = false;
     snoozeTracker = 0;
     alarmLightTracker = 0;
@@ -1214,7 +1221,6 @@ void translateIR() {
 
 
   default:
-    //remoteState = false;
     remoteInput = "REPEAT";
 
   
@@ -1239,8 +1245,6 @@ void volumePage() {
 
   
   u8g2.drawStr(22, 53, "Volume Controls");
-  //u8g2_Symbols();
-  //u8g2.drawUTF8(107, 50, "\u00B6");
 }
 
 
@@ -1273,6 +1277,46 @@ void checkVolume() {
     }
   }
 }
+
+
+void displayVolume() {
+
+  DateTime now = RTC.now();
+
+  currentSecond = now.second();
+
+  if (processVolume != currentVolume && displayVolumeState == false) {
+    processSeconds = now.second();
+    displayVolumeState = true;
+  }
+  
+  if (displayVolumeState == true && processSeconds <= 56) {
+    if (currentSecond >= (processSeconds + 3)) {
+      processVolume = currentVolume;
+      displayVolumeState = false;
+      processSeconds = now.second();
+    }
+  } else if (displayVolumeState == true && processSeconds == 57) {
+    if (currentSecond == 0) {
+      processVolume = currentVolume;
+      displayVolumeState = false;
+      processSeconds = now.second();
+    }
+  } else if (displayVolumeState == true && processSeconds == 58) {
+    if (currentSecond == 1) {
+      processVolume = currentVolume;
+      displayVolumeState = false;
+      processSeconds = now.second();
+    }
+  } else if (displayVolumeState == true && processSeconds == 59) {
+    if (currentSecond == 2) {
+      processVolume = currentVolume;
+      displayVolumeState = false;
+      processSeconds = now.second();
+    }
+  }
+}
+
 
 
 //future fixes/features
