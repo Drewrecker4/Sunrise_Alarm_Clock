@@ -154,7 +154,7 @@ void setup() {
   if (! RTC.isrunning()) {
     u8g2.drawStr(15, 10, "Clock is broken");
   }
-  //RTC.adjust(DateTime(2022, 7, 3, 23, 55, 0)); //adjust real time clock (year, month, day, hour, minute, second) - consider that RTC uses military time
+  //RTC.adjust(DateTime(2022, 11, 6, 21, 34, 0)); //adjust real time clock (year, month, day, hour, minute, second) - consider that RTC uses military time
 
   if (myDFPlayer.begin(Serial1)) {
     Serial1.println("OK");
@@ -229,7 +229,6 @@ void loop() {
     realTimeClock();
     startMillis = currentMillis;
     secondFlash = !secondFlash;
-    //Serial.println(currentMillis);
   }
 
   if (currentMillis - beginMillis >= longPeriod) {
@@ -309,15 +308,6 @@ void loop() {
   snoozeState = digitalRead(snoozeButton);
   volumeUpState = digitalRead(volumeUpButton);
   volumeDownState = digitalRead(volumeDownButton);
-
-  Serial.print(currentVolume);
-  Serial.print(" ");
-  Serial.print(processVolume);
-  Serial.print(" ");
-  Serial.print(processSeconds);
-  Serial.print(" ");
-  Serial.println(currentSecond);
-
 
 }
 
@@ -1321,9 +1311,6 @@ void displayVolume() {
 
 //future fixes/features
 //improvement - center the date on home page using string lengths
-//improvement - display the current song playing on home page instead of date (probably not reasonable with amount of memory available)
 //addition - make a page to set defaults and store to memory? (ex: default 1 - 6AM, 10min delay, 5min snooze, classic rock)
 //addition - remote down arrow and/or push button to replay song?
-//bug - alarm potentially not working sometimes when setting alarm overnight??? may have accidentally fixed?
-//bug - clock randomly acts up when mp3 is playing ... have not seen this issue in a while, may have accidentally fixed?
 //idea - connection piece to make the keypad removable... keep the clock looking nice with the 4 main buttons, while only needing the keypad as a backup to the remote
