@@ -411,19 +411,19 @@ void playlistCheck() {
 
   switch (playlistCounter) {
     case 1:
-      songAmount = 93;
+      songAmount = 94;
       myDFPlayer.EQ(DFPLAYER_EQ_BASS);
       break;
     case 2:
-      songAmount = 79;
+      songAmount = 81;
       myDFPlayer.EQ(DFPLAYER_EQ_BASS);
       break;
     case 3:
-      songAmount = 202;
+      songAmount = 209;
       myDFPlayer.EQ(DFPLAYER_EQ_ROCK);
       break;
     case 4:
-      songAmount = 120;
+      songAmount = 122;
       myDFPlayer.EQ(DFPLAYER_EQ_ROCK);
       break;
     case 5:
@@ -431,11 +431,11 @@ void playlistCheck() {
       myDFPlayer.EQ(DFPLAYER_EQ_POP);
       break;
     case 6:
-      songAmount = 2;
+      songAmount = 33;
       myDFPlayer.EQ(DFPLAYER_EQ_NORMAL);
       break;
     case 7:
-      songAmount = 85;
+      songAmount = 89;
       myDFPlayer.EQ(DFPLAYER_EQ_BASS);
       break;
     case 8:
@@ -443,7 +443,7 @@ void playlistCheck() {
       myDFPlayer.EQ(DFPLAYER_EQ_BASS);
       break;
     case 9:
-      songAmount = 125;
+      songAmount = 128;
       myDFPlayer.EQ(DFPLAYER_EQ_ROCK);
       break;
   }
