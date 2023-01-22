@@ -75,7 +75,6 @@ const int snoozeButton = 31;
 const int snoozeLightPin = 32;
 const int volumeUpButton = 34;
 const int volumeDownButton = 35;
-//const int alarmLightPin = 33;
 
 
 //miscellaneous global variables
@@ -301,6 +300,8 @@ void loop() {
     currentVolume = map(volumeVal, 1, 1024, 1, 30); // scaling of potentiometer reading to use as volume level
   }
 
+//  currentVolume = 12; // dummy value *****
+  
   volumeVal = analogRead(volumeDial);
   myDFPlayer.volume(currentVolume);
   busyState = digitalRead(busyPin);
@@ -308,6 +309,9 @@ void loop() {
   snoozeState = digitalRead(snoozeButton);
   volumeUpState = digitalRead(volumeUpButton);
   volumeDownState = digitalRead(volumeDownButton);
+
+  Serial.println(currentVolume);
+  Serial.println(remoteInput);
 
 }
 
@@ -570,9 +574,10 @@ void homePage() {
     u8g2.drawStr(0, 0, " ");
   }
 
-  //u8g2_smallSymbols();
+  u8g2_smallSymbols();
 
   //display volume level
+
   if (processVolume != currentVolume) {
     u8g2_Text8();
     if (currentVolume < 10) {
@@ -1028,8 +1033,8 @@ void setPlaylistPage() {
 void checkAlarm () {
   DateTime now = RTC.now();
   
-  if (alarmState == true) {
-    if ((fixedHours == alarmHourInt) && (fixedMinutes == alarmMinuteInt) && (fixedSeconds == 0)) {
+  if (alarmState == true && alarmLightHasStarted == false) {
+    if ((fixedHours == alarmHourInt) && (fixedMinutes == alarmMinuteInt)/* && (fixedSeconds == 0)*/) {
       alarmLightHasStarted = true;
       alarmStartingPoint = now.second();
     }
