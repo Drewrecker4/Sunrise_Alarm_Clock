@@ -153,7 +153,7 @@ void setup() {
   if (! RTC.isrunning()) {
     u8g2.drawStr(15, 10, "Clock is broken");
   }
-  //RTC.adjust(DateTime(2022, 11, 6, 21, 34, 0)); //adjust real time clock (year, month, day, hour, minute, second) - consider that RTC uses military time
+  //RTC.adjust(DateTime(2023, 3, 11, 23, 34, 0)); //adjust real time clock (year, month, day, hour, minute, second) - consider that RTC uses military time
 
   if (myDFPlayer.begin(Serial1)) {
     Serial1.println("OK");
